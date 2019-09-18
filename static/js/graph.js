@@ -22,14 +22,26 @@ queue()
 // so our data is loading correctly.
 
 function makeGraphs(error, salaryData) {
-  // crossfilter , one for the whole dashboard
+  // crossfilter ,one for the whole dashboard
   var ndx = crossfilter(salaryData);
+
+  // step 2 - add discipline selector next to the graph:
+  show_discipline_selector(ndx);
 
   // we pass our variable from ndx to function that is
   // going to draw a graph, call it whatever you like:
   show_gender_balance(ndx);
 
   dc.renderAll();
+}
+// step 2 above show_gender_balance we add discipline-selector function:
+function show_discipline_selector(ndx) {
+  dim = ndx.dimension(dc.pluck('discipline'));
+  group = dim.group();
+
+  dc.selectMenu("#discipline-selector")
+    .dimension(dim)
+    .group(group);
 }
 
 // create function:
@@ -51,7 +63,10 @@ function show_gender_balance(ndx) {
     // ordinal scale because we don't have numbers;
     .x(d3.scale.ordinal())
     .xUnits(dc.units.ordinal)
-    .elasticY(true)
+
+    //step 2 deletedd because graphs do not move with changes to y axis:
+    //.elasticY(true)
+
     .xAxisLabel("Gender")
     .yAxis().ticks(20);
 }
