@@ -33,7 +33,10 @@ function makeGraphs(error, salaryData) {
   // step 2 - add discipline selector next to the graph:
   show_discipline_selector(ndx);
 
-  // we pass our variable from ndx to function that is
+  // step 6-1 for all genders women and men later see last video for more explanation
+  show_percent_that_are_professors(ndx, "Female", "#percent-of-women-professors");
+  show_percent_that_are_professors(ndx, "Male", "#percent-of-men-professors");
+  // step 2 we pass our variable from ndx to function that is
   // going to draw a graph, call it whatever you like:
   show_gender_balance(ndx);
 
@@ -53,6 +56,43 @@ function show_discipline_selector(ndx) {
   dc.selectMenu("#discipline-selector")
     .dimension(dim)
     .group(group);
+}
+
+// step 6-2
+function show_percent_that_are_professors(ndx, gender, element) {
+  var percentageThatAreProf = ndx.groupAll().reduce(
+    function (p, v) {
+      if (v.sex === gender) {
+        p.count++;
+        if (v.rank === "Prof") {
+          p.are_prof++;
+        }
+      }
+      return p;
+    },
+    function (p, v) {
+      if (v.sex === gender) {
+        p.count--;
+        if (v.rank === "Prof") {
+          p.are_prof--;
+        }
+      }
+      return p;
+    },
+    function () {
+      return { count: 0, are_prof: 0 };
+    }
+  );
+  dc.numberDisplay(element)
+  .formatNumber(d3.format(".2%"))
+  .valueAccessor(function(d) {
+    if(d.count == 0) {
+      return 0;
+    } else {
+      return (d.are_prof / d.count);
+    }
+  })
+  .group(percentageThatAreProf);
 }
 
 // create function:
@@ -142,48 +182,23 @@ function show_average_salary(ndx) {
 // step 5-2 create function rank-distribution:
 function show_rank_distribution(ndx) {
 
-var dim = ndx.dimension(dc.pluck('sex'));
+  var dim = ndx.dimension(dc.pluck('sex'));
 
-// step 5-3 the group is the place when the things are getting tricky
-//what percentage of men are professors, assistant professor and asociate professor
+  // step 5-3 the group is the place when the things are getting tricky
+  //what percentage of men are professors, assistant professor and asociate professor
 
-// custom reducer written specifically for professors:
-var profByGender = dim.group().reduce(
-  function (p, v) {
-    p.total++;
-    if (v.rank == "Prof") {
-      p.match++;
-    }
-    return p;
-  },
-  function (p, v) {
-    p.total--;
-    if (v.rank == "Prof") {
-      p.match--;
-    }
-    return p;
-  },
-  function () {
-    return { total: 0, match: 0 };
-  }
-);
-
-
-// 5-5 let's create the function rank_by_gender:
-function rankByGender(dimension, rank) {
-  //as return we copy profByGender from 5-3 and replace Prof with rank variable
-  // and dim is dimension:
-  return dimension.group().reduce(
+  // custom reducer written specifically for professors:
+  var profByGender = dim.group().reduce(
     function (p, v) {
       p.total++;
-      if (v.rank == rank) {
+      if (v.rank == "Prof") {
         p.match++;
       }
       return p;
     },
     function (p, v) {
       p.total--;
-      if (v.rank == rank) {
+      if (v.rank == "Prof") {
         p.match--;
       }
       return p;
@@ -192,7 +207,32 @@ function rankByGender(dimension, rank) {
       return { total: 0, match: 0 };
     }
   );
-}
+
+
+  // 5-5 let's create the function rank_by_gender:
+  function rankByGender(dimension, rank) {
+    //as return we copy profByGender from 5-3 and replace Prof with rank variable
+    // and dim is dimension:
+    return dimension.group().reduce(
+      function (p, v) {
+        p.total++;
+        if (v.rank == rank) {
+          p.match++;
+        }
+        return p;
+      },
+      function (p, v) {
+        p.total--;
+        if (v.rank == rank) {
+          p.match--;
+        }
+        return p;
+      },
+      function () {
+        return { total: 0, match: 0 };
+      }
+    );
+  }
 
   // 5-4 we can do the same as above IN 5-3 for assistant professor and we'll have basically the same code
   //but the code is so similar that it's a better way to deal with it.
@@ -202,7 +242,7 @@ function rankByGender(dimension, rank) {
   var asstProfByGender = rankByGender(dim, "AsstProf");
   var assocProfByGender = rankByGender(dim, "AssocProf");
 
-  console.log(profByGender.all());
+  //console.log(profByGender.all());
 
   dc.barChart("#rank-distribution")
     .width(400)
@@ -217,7 +257,7 @@ function rankByGender(dimension, rank) {
     // because we use reduce function we have to use valueAccessor and indicate
     //which value we want to see
     .valueAccessor(function (d) {
-      if(d.value.total > 0) {
+      if (d.value.total > 0) {
         return (d.value.match / d.value.total) * 100;
       }
       else {
