@@ -113,8 +113,8 @@ function show_gender_balance(ndx) {
 
   //gender-balance will be rendered;
   dc.barChart("#gender-balance")
-    .width(400)
-    .height(300)
+    .width(350)
+    .height(250)
     .margins({ top: 10, right: 50, bottom: 30, left: 50 })
     // var dim
     .dimension(dim)
@@ -164,8 +164,8 @@ function show_average_salary(ndx) {
   // step 4 plot barchart:
 
   dc.barChart("#average-salary")
-    .width(400)
-    .height(300)
+    .width(350)
+    .height(250)
     .margins({ top: 10, right: 50, bottom: 30, left: 50 })
     // var dim
     .dimension(dim)
@@ -256,8 +256,8 @@ function show_rank_distribution(ndx) {
   //console.log(profByGender.all());
 
   dc.barChart("#rank-distribution")
-    .width(400)
-    .height(300)
+    .width(350)
+    .height(250)
     // var dim is set in a normal way
     .dimension(dim)
     // main group prof group and we stack assitant and associate prof on it:
