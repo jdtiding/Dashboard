@@ -31,6 +31,8 @@ function makeGraphs(error, salaryData) {
     d.salary = parseInt(d.salary);
     //7-3 yrs_service to be changed to integer:
     d.yrs_service = parseInt(d["yrs.service"]);
+    //8-2 change to integer
+    d.yrs_since_phd = parseInt(d["yrs.since.phd"]);
   });
   // step 2 - add discipline selector next to the graph:
   show_discipline_selector(ndx);
@@ -51,6 +53,9 @@ function makeGraphs(error, salaryData) {
 
   // step 7-1
   show_service_to_salary_correlation(ndx);
+  // step 8-1
+  show_phd_to_salary_correlation(ndx);
+
 
   dc.renderAll();
 }
@@ -321,7 +326,8 @@ function show_service_to_salary_correlation(ndx) {
     .symbolSize(8)
     //leaves room at the top
     .clipPadding(10)
-    .yAxisLabel("Years Of Service")
+    .yAxisLabel("Salary")
+    .xAxisLabel("Years Of Service")
     //what will appear if you hover the mouse over the dot:
     .title(function (d) {
       //d.key[1] see varexpericneDim = d.salary
@@ -330,7 +336,7 @@ function show_service_to_salary_correlation(ndx) {
     })
     //7-4-4 we need to add color accessor from var experienceDim
     // sex is array 3
-    .colorAccessor(function(d) {
+    .colorAccessor(function (d) {
       return d.key[3];
     })
     //7-4-2 adding colors from 7-4-1 to our graph:
@@ -338,6 +344,43 @@ function show_service_to_salary_correlation(ndx) {
     .dimension(experienceDim)
     .group(experienceSalaryGroup)
     .margins({ top: 10, right: 50, bottom: 75, left: 75 });
+}
 
+// step 8-3 duplicate funcion above and adjust names
+function show_phd_to_salary_correlation(ndx) {
+
+  var genderColors = d3.scale.ordinal()
+    .domain(["Female", "Male"])
+    .range(["pink", "blue"]);
+
+  var pDim = ndx.dimension(dc.pluck("yrs_since_phd"));
+  var phdDim = ndx.dimension(function (d) {
+    return [d.yrs_since_phd, d.salary, d.rank, d.sex];
+  });
+
+  var phdSalaryGroup = phdDim.group();
+
+  var minPhd = pDim.bottom(1)[0].yrs_since_phd;
+  var maxPhd = pDim.top(1)[0].yrs_since_phd;
+
+  dc.scatterPlot("#phd-salary")
+    .width(800)
+    .height(400)
+    .x(d3.scale.linear().domain([minPhd, maxPhd]))
+    .brushOn(false)
+    .symbolSize(8)
+    .clipPadding(10)
+    .yAxisLabel("Salary")
+    .xAxisLabel("Years Since PhD")
+    .title(function (d) {
+      return d.key[2] + " earned" + d.key[1];
+    })
+    .colorAccessor(function (d) {
+      return d.key[3];
+    })
+    .colors(genderColors)
+    .dimension(phdDim)
+    .group(phdSalaryGroup)
+    .margins({ top: 10, right: 50, bottom: 75, left: 75 });
 }
 
