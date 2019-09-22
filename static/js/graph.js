@@ -29,13 +29,16 @@ function makeGraphs(error, salaryData) {
   // change them for integers:
   salaryData.forEach(function (d) {
     d.salary = parseInt(d.salary);
-  })
+    //7-3 yrs_service to be changed to integer:
+    d.yrs_service = parseInt(d["yrs.service"]);
+  });
   // step 2 - add discipline selector next to the graph:
   show_discipline_selector(ndx);
 
   // step 6-1 for all genders women and men later see last video for more explanation
   show_percent_that_are_professors(ndx, "Female", "#percent-of-women-professors");
   show_percent_that_are_professors(ndx, "Male", "#percent-of-men-professors");
+
   // step 2 we pass our variable from ndx to function that is
   // going to draw a graph, call it whatever you like:
   show_gender_balance(ndx);
@@ -45,6 +48,9 @@ function makeGraphs(error, salaryData) {
 
   // step 5-1 show rank distribution:
   show_rank_distribution(ndx);
+
+  // step 7-1
+  show_service_to_salary_correlation(ndx);
 
   dc.renderAll();
 }
@@ -84,15 +90,15 @@ function show_percent_that_are_professors(ndx, gender, element) {
     }
   );
   dc.numberDisplay(element)
-  .formatNumber(d3.format(".2%"))
-  .valueAccessor(function(d) {
-    if(d.count == 0) {
-      return 0;
-    } else {
-      return (d.are_prof / d.count);
-    }
-  })
-  .group(percentageThatAreProf);
+    .formatNumber(d3.format(".2%"))
+    .valueAccessor(function (d) {
+      if (d.count == 0) {
+        return 0;
+      } else {
+        return (d.are_prof / d.count);
+      }
+    })
+    .group(percentageThatAreProf);
 }
 
 // create function:
@@ -274,5 +280,64 @@ function show_rank_distribution(ndx) {
 
     .xAxisLabel("Gender")
     .yAxis().ticks(4);
+}
+
+// step 7-2 create function
+function show_service_to_salary_correlation(ndx) {
+
+  // 7-4-1 colors: we need to pick one of the attributes in our data
+  //set and map the values in that attribute to the colors that we want
+  // we choose gender: 
+  var genderColors = d3.scale.ordinal()
+    .domain(["Female", "Male"])
+    .range(["pink", "blue"]);
+
+  // 7-2 we have to create 2 dimensions
+  //first years of service x- axis(min and max years of service)
+  var eDim = ndx.dimension(dc.pluck("yrs_service"));
+  // second dim function containg 2 pieces of information to plot the dots
+  // yrs.service x-coordinate, salary y-coordinate
+  var experienceDim = ndx.dimension(function (d) {
+    //7-4-2 we have to add the value to pick the color
+    // we are adding two here rank and sex
+    //but we need only sex - see video explanation
+    return [d.yrs_service, d.salary, d.rank, d.sex];
+  });
+  //creating a group:
+  var experienceSalaryGroup = experienceDim.group();
+
+  //creating dots on a scatter plot:
+  var minExperience = eDim.bottom(1)[0].yrs_service;
+  var maxExperience = eDim.top(1)[0].yrs_service;
+
+  //create scatter plot:
+  dc.scatterPlot("#service-salary")
+    .width(800)
+    .height(400)
+    .x(d3.scale.linear().domain([minExperience, maxExperience]))
+    //play with brushOn false/true to see what happens with the graph:
+    .brushOn(false)
+    //size of the dots:
+    .symbolSize(8)
+    //leaves room at the top
+    .clipPadding(10)
+    .yAxisLabel("Years Of Service")
+    //what will appear if you hover the mouse over the dot:
+    .title(function (d) {
+      //d.key[1] see varexpericneDim = d.salary
+      //7-4-4 we allso modify titel and adding rank
+      return d.key[2] + " earned" + d.key[1];
+    })
+    //7-4-4 we need to add color accessor from var experienceDim
+    // sex is array 3
+    .colorAccessor(function(d) {
+      return d.key[3];
+    })
+    //7-4-2 adding colors from 7-4-1 to our graph:
+    .colors(genderColors)
+    .dimension(experienceDim)
+    .group(experienceSalaryGroup)
+    .margins({ top: 10, right: 50, bottom: 75, left: 75 });
+
 }
 
